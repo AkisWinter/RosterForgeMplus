@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
-from datetime import datetime
+from datetime import datetime, UTC
 
 Base = declarative_base()
 
@@ -53,7 +53,7 @@ class CharacterSnapshot(Base):
     raid_slot1_ilvl = Column(Integer)
     raid_slot2_ilvl = Column(Integer)
     raid_slot3_ilvl = Column(Integer)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
 class TrackedGuild(Base):
     __tablename__ = 'tracked_guilds'
@@ -68,7 +68,7 @@ class UserCharacter(Base):
     id = Column(Integer, primary_key=True)
     discord_id = Column(String, nullable=False)
     character_id = Column(String, nullable=False)
-    added_at = Column(DateTime, default=datetime.utcnow)
+    added_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
 class Rooster(Base):
     __tablename__ = 'roosters'
@@ -76,7 +76,7 @@ class Rooster(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
     created_by = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
     members = relationship("RoosterMember", back_populates="rooster")
 
 class RoosterMember(Base):
@@ -86,6 +86,24 @@ class RoosterMember(Base):
     rooster_id = Column(Integer, ForeignKey('roosters.id'))
     character_id = Column(String, nullable=False)
     rooster = relationship("Rooster", back_populates="members")
+    role = Column(String)
+    
+class MythicPlusEvent(Base):
+    __tablename__ = "mplus_events"
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    created_by = Column(String)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    message_id = Column(Integer)  # optional zur Zuordnung der Nachricht
+
+class MPlusSignup(Base):
+    __tablename__ = "mplus_signups"
+    id = Column(Integer, primary_key=True)
+    event_id = Column(Integer, ForeignKey("mplus_events.id"))
+    user_id = Column(String)
+    character_id = Column(String)
+    spec = Column(String)
+    role = Column(String)
 
 class SQLHandler:
     def __init__(self, database_url):
@@ -159,7 +177,7 @@ class SQLHandler:
                 raid_slot1_ilvl=character_info['raid_rewards'][0]['item_level'],
                 raid_slot2_ilvl=character_info['raid_rewards'][1]['item_level'],
                 raid_slot3_ilvl=character_info['raid_rewards'][2]['item_level'],
-                timestamp=datetime.utcnow()
+                timestamp=datetime.now(UTC)
             )
             self.session.add(snapshot)
             self.session.commit()

@@ -1,0 +1,67 @@
+{
+  "Warrior": {
+    "Arms": "DPS",
+    "Fury": "DPS",
+    "Protection": "Tank"
+  },
+  "Paladin": {
+    "Holy": "Healer",
+    "Protection": "Tank",
+    "Retribution": "DPS"
+  },
+  "Hunter": {
+    "Beast Mastery": "DPS",
+    "Marksmanship": "DPS",
+    "Survival": "DPS"
+  },
+  "Rogue": {
+    "Assassination": "DPS",
+    "Outlaw": "DPS",
+    "Subtlety": "DPS"
+  },
+  "Priest": {
+    "Discipline": "Healer",
+    "Holy": "Healer",
+    "Shadow": "DPS"
+  },
+  "Death Knight": {
+    "Blood": "Tank",
+    "Frost": "DPS",
+    "Unholy": "DPS"
+  },
+  "Shaman": {
+    "Elemental": "DPS",
+    "Enhancement": "DPS",
+    "Restoration": "Healer"
+  },
+  "Mage": {
+    "Arcane": "DPS",
+    "Fire": "DPS",
+    "Frost": "DPS"
+  },
+  "Warlock": {
+    "Affliction": "DPS",
+    "Demonology": "DPS",
+    "Destruction": "DPS"
+  },
+  "Monk": {
+    "Brewmaster": "Tank",
+    "Mistweaver": "Healer",
+    "Windwalker": "DPS"
+  },
+  "Druid": {
+    "Balance": "DPS",
+    "Feral": "DPS",
+    "Guardian": "Tank",
+    "Restoration": "Healer"
+  },
+  "Demon Hunter": {
+    "Havoc": "DPS",
+    "Vengeance": "Tank"
+  },
+  "Evoker": {
+    "Devastation": "DPS",
+    "Preservation": "Healer",
+    "Augmentation": "DPS"
+  }
+}
