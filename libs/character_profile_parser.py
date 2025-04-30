@@ -2,9 +2,9 @@ import datetime
 
 class CharacterProfileParser:
     def __init__(self, profile_data, keystone_data, raid_data, debug=False, keystone_reward_mapping=None, raid_reward_mapping=None, active_raid_name=None):
-        self.profile_data = profile_data
-        self.keystone_data = keystone_data
-        self.raid_data = raid_data
+        self.profile_data = profile_data or {}
+        self.keystone_data = keystone_data or {}
+        self.raid_data = raid_data or {}
         self.debug = debug
         self.keystone_reward_mapping = keystone_reward_mapping or {
             20: 483,
@@ -32,6 +32,7 @@ class CharacterProfileParser:
             'name': self.profile_data.get('name', 'Unknown'),
             'realm': self.profile_data.get('realm', {}).get('name', 'Unknown'),
             'level': self.profile_data.get('level', 0),
+            'class_name': self.profile_data.get('character_class', {}).get('name', 'Unknown'),
             'equipped_item_level': self.profile_data.get('equipped_item_level', 0),
             'average_item_level': self.profile_data.get('average_item_level', 0),
             'mythic_plus_score': self._get_mythic_plus_score(),
@@ -47,20 +48,33 @@ class CharacterProfileParser:
         return info
 
     def _get_mythic_plus_score(self):
-        return round(self.keystone_data.get('current_mythic_rating', {}).get('rating', 0), 1)
+        if 'mythic_plus_scores_by_season' in self.keystone_data:
+            season_scores = self.keystone_data['mythic_plus_scores_by_season']
+            if season_scores and isinstance(season_scores, list):
+                return round(season_scores[0].get('scores', {}).get('all', 0), 1)
+        elif 'current_mythic_rating' in self.keystone_data:
+            return round(self.keystone_data.get('current_mythic_rating', {}).get('rating', 0), 1)
+        return 0
 
     def _get_mplus_vault_rewards(self):
         vault = []
-        best_runs = self.keystone_data.get('current_period', {}).get('best_runs', [])
-        sorted_runs = sorted(best_runs, key=lambda x: x.get('keystone_level', 0), reverse=True)
+        if 'mythic_plus_weekly_highest_level_runs' in self.keystone_data:
+            best_runs = self.keystone_data.get('mythic_plus_weekly_highest_level_runs', [])
+        elif 'current_period' in self.keystone_data:
+            best_runs = self.keystone_data.get('current_period', {}).get('best_runs', [])
+        else:
+            best_runs = []
+
+        sorted_runs = sorted(best_runs, key=lambda x: x.get('mythic_level', 0) or x.get('keystone_level', 0), reverse=True)
 
         for i in range(3):
             if i < len(sorted_runs):
-                keylevel = sorted_runs[i].get('keystone_level', 0)
+                keylevel = sorted_runs[i].get('mythic_level') or sorted_runs[i].get('keystone_level', 0)
                 itemlevel = self._get_reward_item_level(keylevel)
                 vault.append({"slot": i + 1, "key_level": keylevel, "item_level": itemlevel})
             else:
                 vault.append({"slot": i + 1, "key_level": None, "item_level": None})
+
         return vault
 
     def _get_reward_item_level(self, keystone_level):

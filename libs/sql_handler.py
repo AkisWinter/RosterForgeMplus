@@ -1,9 +1,10 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
 
 Base = declarative_base()
+
 
 class CharacterProfile(Base):
     __tablename__ = 'character_profiles'
@@ -14,6 +15,7 @@ class CharacterProfile(Base):
     realm = Column(String(100))
     guild = Column(String(100))
     level = Column(Integer)
+    class_name = Column(String(50))
     equipped_item_level = Column(Integer)
     average_item_level = Column(Integer)
     mythic_plus_score = Column(Float)
@@ -37,6 +39,7 @@ class CharacterSnapshot(Base):
     realm = Column(String(100))
     guild = Column(String(100))
     level = Column(Integer)
+    class_name = Column(String(50))
     equipped_item_level = Column(Integer)
     average_item_level = Column(Integer)
     mythic_plus_score = Column(Float)
@@ -52,6 +55,38 @@ class CharacterSnapshot(Base):
     raid_slot3_ilvl = Column(Integer)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
+class TrackedGuild(Base):
+    __tablename__ = 'tracked_guilds'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    realm = Column(String, nullable=False)
+
+class UserCharacter(Base):
+    __tablename__ = 'user_characters'
+
+    id = Column(Integer, primary_key=True)
+    discord_id = Column(String, nullable=False)
+    character_id = Column(String, nullable=False)
+    added_at = Column(DateTime, default=datetime.utcnow)
+
+class Rooster(Base):
+    __tablename__ = 'roosters'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, unique=True)
+    created_by = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    members = relationship("RoosterMember", back_populates="rooster")
+
+class RoosterMember(Base):
+    __tablename__ = 'rooster_members'
+
+    id = Column(Integer, primary_key=True)
+    rooster_id = Column(Integer, ForeignKey('roosters.id'))
+    character_id = Column(String, nullable=False)
+    rooster = relationship("Rooster", back_populates="members")
+
 class SQLHandler:
     def __init__(self, database_url):
         self.database_url = database_url
@@ -61,11 +96,20 @@ class SQLHandler:
 
     def create_tables(self):
         Base.metadata.create_all(self.engine)
+        # Optionally insert default tracked guilds
+        default_guilds = [
+            #{"name": "Requiem DSH", "realm": "Antonidas"}
+        ]
+        for g in default_guilds:
+            if not self.session.query(TrackedGuild).filter_by(name=g["name"], realm=g["realm"]).first():
+                self.session.add(TrackedGuild(name=g["name"], realm=g["realm"]))
+        self.session.commit()
         print("Tables created successfully.")
 
     def insert_character_info(self, character_info):
         try:
             char_id = character_info['name'] + "-" + character_info['realm']
+            char_id = char_id.replace(" ", "").replace("'", "")
             character = CharacterProfile(
                 char_id=char_id,
                 name=character_info['name'],
@@ -95,6 +139,7 @@ class SQLHandler:
     def record_character_snapshot(self, character_info):
         try:
             char_id = character_info['name'] + "-" + character_info['realm']
+            char_id = char_id.replace(" ", "").replace("'", "")
             snapshot = CharacterSnapshot(
                 char_id=char_id,
                 name=character_info['name'],
@@ -152,3 +197,27 @@ class SQLHandler:
             self.session.rollback()
             print(f"Fetch error: {e}")
             return []
+
+
+    def add_tracked_guild(self, name, realm):
+        try:
+            existing = self.session.query(TrackedGuild).filter_by(name=name, realm=realm).first()
+            if existing:
+                return False
+            self.session.add(TrackedGuild(name=name, realm=realm))
+            self.session.commit()
+            return True
+        except Exception as e:
+            self.session.rollback()
+            print(f"Error adding tracked guild: {e}")
+            return False
+    
+    def remove_tracked_guild(self, name, realm):
+        try:
+            deleted = self.session.query(TrackedGuild).filter_by(name=name, realm=realm).delete()
+            self.session.commit()
+            return deleted > 0
+        except Exception as e:
+            self.session.rollback()
+            print(f"Error removing tracked guild: {e}")
+            return False

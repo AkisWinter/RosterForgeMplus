@@ -4,6 +4,15 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Discord Settings
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+DISCORD_GUILD_ID = int(os.getenv("DISCORD_GUILD_ID"))
+
+# Raider.IO Settings
+USE_RAIDERIO_FOR_MPLUS = os.getenv("USE_RAIDERIO_FOR_MPLUS", "true").lower() == "true"
+RAIDERIO_ACCESS_KEY = os.getenv("RAIDERIO_ACCESS_KEY")
+
+
 # Blizzard API Settings
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
@@ -52,3 +61,5 @@ RAID_MAPPING = {
 # Active Raid Settings
 ACTIVE_RAID_NAME = "Liberation of Undermine"
 ACTIVE_RAID_DIFFICULTY = "Heroic"
+
+
