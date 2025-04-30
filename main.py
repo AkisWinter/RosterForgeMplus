@@ -4,7 +4,7 @@ import json
 import time
 from urllib.parse import quote
 from config import DATABASE_URL, CLIENT_ID, CLIENT_SECRET, REGION, LOCALE, MYTHIC_PLUS_MAPPING, RAID_MAPPING, ACTIVE_RAID_NAME, USE_RAIDERIO_FOR_MPLUS, RAIDERIO_ACCESS_KEY
-from libs.sql_handler import SQLHandler, TrackedGuild, UserCharacter, RoosterMember, CharacterProfile, CharacterSnapshot
+from libs.sql_handler import SQLHandler, TrackedGuild, UserCharacter, RosterMember, CharacterProfile, CharacterSnapshot
 from libs.blizzard_api_handler import BlizzardAPIClient
 from libs.character_profile_parser import CharacterProfileParser
 from libs.raiderio_api_handler import RaiderIOAPIClient
@@ -36,8 +36,8 @@ def collect_unique_characters(db_handler):
     for user_char in users:
         characters.add(user_char.character_id)
 
-    rooster_members = session.query(RoosterMember).all()
-    for member in rooster_members:
+    roster_members = session.query(RosterMember).all()
+    for member in roster_members:
         characters.add(member.character_id)
 
     return characters

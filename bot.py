@@ -6,7 +6,7 @@ from libs.sql_handler import SQLHandler
 # Command module registrations
 from bot_libs.char_commands import register_char_commands
 from bot_libs.guild_commands import register_guild_commands
-from bot_libs.rooster_commands import register_rooster_commands
+from bot_libs.roster_commands import register_roster_commands
 from bot_libs.event_commands import register_event_commands
 from bot_libs.reaction_handler import setup_reaction_handler
 
@@ -31,7 +31,7 @@ async def on_ready():
     # Jetzt neu registrieren
     register_char_commands(tree, db_handler, guild=guild)
     register_guild_commands(tree, db_handler, guild=guild)
-    register_rooster_commands(tree, db_handler, guild=guild)
+    register_roster_commands(tree, db_handler, guild=guild)
     register_event_commands(bot, db_handler, guild=guild)
     
     print("📋 Registrierte Slash-Befehle:")

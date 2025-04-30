@@ -70,22 +70,22 @@ class UserCharacter(Base):
     character_id = Column(String, nullable=False)
     added_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
-class Rooster(Base):
-    __tablename__ = 'roosters'
+class Roster(Base):
+    __tablename__ = 'rosters'
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
     created_by = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
-    members = relationship("RoosterMember", back_populates="rooster")
+    members = relationship("RosterMember", back_populates="roster")
 
-class RoosterMember(Base):
-    __tablename__ = 'rooster_members'
+class RosterMember(Base):
+    __tablename__ = 'roster_members'
 
     id = Column(Integer, primary_key=True)
-    rooster_id = Column(Integer, ForeignKey('roosters.id'))
+    roster_id = Column(Integer, ForeignKey('rosters.id'))
     character_id = Column(String, nullable=False)
-    rooster = relationship("Rooster", back_populates="members")
+    roster = relationship("Roster", back_populates="members")
     role = Column(String)
     
 class MythicPlusEvent(Base):

@@ -1,29 +1,29 @@
-### File: rooster_commands.py
+### File: roster_commands.py
 
 import discord
 from discord import app_commands
 from libs.utils import sanitize_charname, split_charname, build_char_id
-from libs.sql_handler import Rooster, RoosterMember, CharacterProfile
+from libs.sql_handler import Roster, RosterMember, CharacterProfile
 from libs.character_service import fetch_character_info, persist_character
 
 import json
 with open("libs/realm_slug_map_eu.json", "r", encoding="utf-8") as f:
     REALM_SLUG_MAP = json.load(f)
 
-def register_rooster_commands(tree: discord.app_commands.CommandTree, db_handler, guild=None):
+def register_roster_commands(tree: discord.app_commands.CommandTree, db_handler, guild=None):
     
-    @tree.command(name="rooster_invites", description="List /inv lines for all members of a rooster", guild=guild)
-    @app_commands.describe(rooster="Rooster name")
-    async def rooster_invites(interaction: discord.Interaction, rooster: str):
+    @tree.command(name="roster_invites", description="List /inv lines for all members of a roster", guild=guild)
+    @app_commands.describe(roster="Roster name")
+    async def roster_invites(interaction: discord.Interaction, roster: str):
         session = db_handler.session
-        r = session.query(Rooster).filter_by(name=rooster).first()
+        r = session.query(Roster).filter_by(name=roster).first()
         if not r:
-            await interaction.response.send_message(f"Rooster '{rooster}' not found.", ephemeral=True)
+            await interaction.response.send_message(f"Roster '{roster}' not found.", ephemeral=True)
             return
 
-        members = session.query(RoosterMember).filter_by(rooster_id=r.id).all()
+        members = session.query(RosterMember).filter_by(roster_id=r.id).all()
         if not members:
-            await interaction.response.send_message(f"Rooster '{rooster}' has no members.", ephemeral=True)
+            await interaction.response.send_message(f"Roster '{roster}' has no members.", ephemeral=True)
             return
 
         lines = [f"/inv {m.character_id}" for m in members]
@@ -39,64 +39,64 @@ def register_rooster_commands(tree: discord.app_commands.CommandTree, db_handler
         output = "\n\n".join([f"```\n{block}\n```" for block in chunks])
         await interaction.response.send_message(output, ephemeral=True)
 
-    @tree.command(name="create_rooster", description="Create a new raid rooster")
-    @app_commands.describe(name="Rooster name")
-    async def create_rooster(interaction: discord.Interaction, name: str):
+    @tree.command(name="create_roster", description="Create a new raid roster")
+    @app_commands.describe(name="Roster name")
+    async def create_roster(interaction: discord.Interaction, name: str):
         if not interaction.user.guild_permissions.manage_guild:
-            await interaction.response.send_message("❌ You don't have permission to create a rooster.", ephemeral=True)
+            await interaction.response.send_message("❌ You don't have permission to create a roster.", ephemeral=True)
             return
 
         session = db_handler.session
-        exists = session.query(Rooster).filter_by(name=name).first()
+        exists = session.query(Roster).filter_by(name=name).first()
         if exists:
-            await interaction.response.send_message(f"Rooster '{name}' already exists.", ephemeral=True)
+            await interaction.response.send_message(f"Roster '{name}' already exists.", ephemeral=True)
             return
 
-        session.add(Rooster(name=name, created_by=str(interaction.user.id)))
+        session.add(Roster(name=name, created_by=str(interaction.user.id)))
         session.commit()
-        await interaction.response.send_message(f"✅ Rooster '{name}' created.", ephemeral=True)
+        await interaction.response.send_message(f"✅ Roster '{name}' created.", ephemeral=True)
 
-    @tree.command(name="delete_rooster", description="Delete a raid rooster")
-    @app_commands.describe(name="Rooster name")
-    async def delete_rooster(interaction: discord.Interaction, name: str):
+    @tree.command(name="delete_roster", description="Delete a raid roster")
+    @app_commands.describe(name="Roster name")
+    async def delete_roster(interaction: discord.Interaction, name: str):
         if not interaction.user.guild_permissions.manage_guild:
-            await interaction.response.send_message("❌ You don't have permission to delete a rooster.", ephemeral=True)
+            await interaction.response.send_message("❌ You don't have permission to delete a roster.", ephemeral=True)
             return
 
         session = db_handler.session
-        rooster = session.query(Rooster).filter_by(name=name).first()
-        if not rooster:
-            await interaction.response.send_message(f"Rooster '{name}' not found.", ephemeral=True)
+        roster = session.query(Roster).filter_by(name=name).first()
+        if not roster:
+            await interaction.response.send_message(f"Roster '{name}' not found.", ephemeral=True)
             return
 
-        session.query(RoosterMember).filter_by(rooster_id=rooster.id).delete()
-        session.delete(rooster)
+        session.query(RosterMember).filter_by(roster_id=roster.id).delete()
+        session.delete(roster)
         session.commit()
-        await interaction.response.send_message(f"✅ Rooster '{name}' deleted.", ephemeral=True)
+        await interaction.response.send_message(f"✅ Roster '{name}' deleted.", ephemeral=True)
 
-    @tree.command(name="list_roosters", description="List all raid roosters")
-    async def list_roosters(interaction: discord.Interaction):
+    @tree.command(name="list_rosters", description="List all raid rosters")
+    async def list_rosters(interaction: discord.Interaction):
         session = db_handler.session
-        roosters = session.query(Rooster).all()
-        if not roosters:
-            await interaction.response.send_message("No roosters found.", ephemeral=True)
+        rosters = session.query(Roster).all()
+        if not rosters:
+            await interaction.response.send_message("No rosters found.", ephemeral=True)
             return
 
-        lines = [f"{r.name}" for r in roosters]
+        lines = [f"{r.name}" for r in rosters]
         await interaction.response.send_message("```\n" + "\n".join(lines) + "\n```", ephemeral=True)
 
-    @tree.command(name="list_rooster_members", description="List members in a raid rooster with profile info")
-    @app_commands.describe(name="Rooster name")
-    async def list_rooster_members(interaction: discord.Interaction, name: str):
+    @tree.command(name="list_roster_members", description="List members in a raid roster with profile info")
+    @app_commands.describe(name="Roster name")
+    async def list_roster_members(interaction: discord.Interaction, name: str):
         session = db_handler.session
-        rooster = session.query(Rooster).filter_by(name=name).first()
-        if not rooster:
-            await interaction.response.send_message(f"Rooster '{name}' not found.", ephemeral=True)
+        roster = session.query(Roster).filter_by(name=name).first()
+        if not roster:
+            await interaction.response.send_message(f"Roster '{name}' not found.", ephemeral=True)
             return
 
-        members = session.query(RoosterMember).filter_by(rooster_id=rooster.id).all()
+        members = session.query(RosterMember).filter_by(roster_id=roster.id).all()
         if not members:
-            await interaction.response.send_message(f"Rooster '{name}' has no members.", ephemeral=True)
+            await interaction.response.send_message(f"Roster '{name}' has no members.", ephemeral=True)
             return
 
         def resolve_raid_difficulty(ilvl):
@@ -171,9 +171,9 @@ def register_rooster_commands(tree: discord.app_commands.CommandTree, db_handler
         for block in blocks[1:]:
             await interaction.followup.send(block, ephemeral=True)
     
-    @tree.command(name="add_to_rooster", description="Add a character to a rooster (includes profile fetch)", guild=guild)
+    @tree.command(name="add_to_roster", description="Add a character to a roster (includes profile fetch)", guild=guild)
     @app_commands.describe(
-        rooster="Rooster name",
+        roster="Roster name",
         char="Character name with realm (e.g. Akisfury-Blackrock)",
         role="Character role in raid"
     )
@@ -182,14 +182,14 @@ def register_rooster_commands(tree: discord.app_commands.CommandTree, db_handler
         app_commands.Choice(name="Healer", value="Healer"),
         app_commands.Choice(name="DPS", value="DPS"),
     ])
-    async def add_to_rooster(interaction: discord.Interaction, rooster: str, char: str, role: app_commands.Choice[str]):
+    async def add_to_roster(interaction: discord.Interaction, roster: str, char: str, role: app_commands.Choice[str]):
         await interaction.response.defer(ephemeral=True)
         session = db_handler.session
         user_id = str(interaction.user.id)
 
-        r = session.query(Rooster).filter_by(name=rooster).first()
+        r = session.query(Roster).filter_by(name=roster).first()
         if not r:
-            await interaction.followup.send(f"❌ Rooster '{rooster}' not found.", ephemeral=True)
+            await interaction.followup.send(f"❌ Roster '{roster}' not found.", ephemeral=True)
             return
 
         char = sanitize_charname(char)
@@ -220,15 +220,15 @@ def register_rooster_commands(tree: discord.app_commands.CommandTree, db_handler
 
             persist_character(session, user_id, char_id, info)
 
-            exists = session.query(RoosterMember).filter_by(rooster_id=r.id, character_id=char_id).first()
+            exists = session.query(RosterMember).filter_by(roster_id=r.id, character_id=char_id).first()
             if exists:
-                await interaction.followup.send(f"⚠️ {char_id} is already in '{rooster}'.", ephemeral=True)
+                await interaction.followup.send(f"⚠️ {char_id} is already in '{roster}'.", ephemeral=True)
                 return
 
-            session.add(RoosterMember(rooster_id=r.id, character_id=char_id, role=role.value))
+            session.add(RosterMember(roster_id=r.id, character_id=char_id, role=role.value))
             session.commit()
-            await interaction.followup.send(f"✅ {char_id} added to rooster '{rooster}' as {role.value}.", ephemeral=True)
+            await interaction.followup.send(f"✅ {char_id} added to roster '{roster}' as {role.value}.", ephemeral=True)
 
         except Exception as e:
             session.rollback()
-            await interaction.followup.send(f"❌ Error while adding to rooster: {e}", ephemeral=True)
+            await interaction.followup.send(f"❌ Error while adding to roster: {e}", ephemeral=True)
