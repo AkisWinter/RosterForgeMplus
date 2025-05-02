@@ -1,5 +1,7 @@
 # RosterForMplus
 
+WiP - some features not implemented or not working yet
+
 ---
 
 ## 🔧 Features
