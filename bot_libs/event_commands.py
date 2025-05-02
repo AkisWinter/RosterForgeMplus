@@ -72,13 +72,13 @@ def register_event_commands(bot: commands.Bot, db_handler, guild=None):
 
         embed = discord.Embed(title=f"M+ Event: {name}", description="Klicke auf eine Reaktion, um dich anzumelden.", color=discord.Color.blue())
         embed.add_field(name="🛡️ Tank", value="0/1", inline=True)
-        embed.add_field(name="💉 Healer", value="0/1", inline=True)
+        embed.add_field(name="🍃 Healer", value="0/1", inline=True)
         embed.add_field(name="⚔️ DPS", value="0/3", inline=True)
         embed.set_footer(text="Bot fragt dich nach Charakter & Spec")
 
         message = await interaction.channel.send(embed=embed)
         await message.add_reaction("🛡️")
-        await message.add_reaction("💉")
+        await message.add_reaction("🍃")
         await message.add_reaction("⚔️")
 
         event.message_id = message.id

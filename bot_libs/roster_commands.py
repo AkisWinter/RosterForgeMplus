@@ -12,6 +12,7 @@ with open("libs/realm_slug_map_eu.json", "r", encoding="utf-8") as f:
 
 def register_roster_commands(tree: discord.app_commands.CommandTree, db_handler, guild=None):
     
+    # SLASH roster_invites
     @tree.command(name="roster_invites", description="List /inv lines for all members of a roster", guild=guild)
     @app_commands.describe(roster="Roster name")
     async def roster_invites(interaction: discord.Interaction, roster: str):
@@ -39,7 +40,8 @@ def register_roster_commands(tree: discord.app_commands.CommandTree, db_handler,
         output = "\n\n".join([f"```\n{block}\n```" for block in chunks])
         await interaction.response.send_message(output, ephemeral=True)
 
-    @tree.command(name="create_roster", description="Create a new raid roster")
+    # SLASH create_roster
+    @tree.command(name="create_roster", description="Create a new raid roster", guild=guild)
     @app_commands.describe(name="Roster name")
     async def create_roster(interaction: discord.Interaction, name: str):
         if not interaction.user.guild_permissions.manage_guild:
@@ -56,7 +58,8 @@ def register_roster_commands(tree: discord.app_commands.CommandTree, db_handler,
         session.commit()
         await interaction.response.send_message(f"✅ Roster '{name}' created.", ephemeral=True)
 
-    @tree.command(name="delete_roster", description="Delete a raid roster")
+    # SLASH delete_roster
+    @tree.command(name="delete_roster", description="Delete a raid roster", guild=guild)
     @app_commands.describe(name="Roster name")
     async def delete_roster(interaction: discord.Interaction, name: str):
         if not interaction.user.guild_permissions.manage_guild:
@@ -74,7 +77,8 @@ def register_roster_commands(tree: discord.app_commands.CommandTree, db_handler,
         session.commit()
         await interaction.response.send_message(f"✅ Roster '{name}' deleted.", ephemeral=True)
 
-    @tree.command(name="list_rosters", description="List all raid rosters")
+    # SLASH list_rosters
+    @tree.command(name="list_rosters", description="List all raid rosters", guild=guild)
     async def list_rosters(interaction: discord.Interaction):
         session = db_handler.session
         rosters = session.query(Roster).all()
@@ -84,8 +88,9 @@ def register_roster_commands(tree: discord.app_commands.CommandTree, db_handler,
 
         lines = [f"{r.name}" for r in rosters]
         await interaction.response.send_message("```\n" + "\n".join(lines) + "\n```", ephemeral=True)
-
-    @tree.command(name="list_roster_members", description="List members in a raid roster with profile info")
+    
+    # SLASH list_roster_members
+    @tree.command(name="list_roster_members", description="List members in a raid roster with profile info", guild=guild)
     @app_commands.describe(name="Roster name")
     async def list_roster_members(interaction: discord.Interaction, name: str):
         session = db_handler.session
@@ -171,6 +176,7 @@ def register_roster_commands(tree: discord.app_commands.CommandTree, db_handler,
         for block in blocks[1:]:
             await interaction.followup.send(block, ephemeral=True)
     
+    # SLASH add_to_roster
     @tree.command(name="add_to_roster", description="Add a character to a roster (includes profile fetch)", guild=guild)
     @app_commands.describe(
         roster="Roster name",

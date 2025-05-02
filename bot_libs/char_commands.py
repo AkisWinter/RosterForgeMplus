@@ -38,7 +38,7 @@ def register_char_commands(tree: discord.app_commands.CommandTree, db_handler, g
             await interaction.followup.send(f"❌ Error: {e}", ephemeral=True)
             return None
 
-    @tree.command(name="add_char", description="Link your WoW character and fetch profile")
+    @tree.command(name="add_char", description="Link your WoW character and fetch profile", guild=guild)
     @app_commands.describe(char="Character name with realm (e.g. Akisfury-Blackrock)")
     async def add_char(interaction: discord.Interaction, char: str):
         await interaction.response.defer(ephemeral=True)
@@ -56,7 +56,7 @@ def register_char_commands(tree: discord.app_commands.CommandTree, db_handler, g
         if char_id:
             await interaction.followup.send(f"✅ Character {char_id} linked and data stored.", ephemeral=True)
 
-    @tree.command(name="remove_char", description="Unlink a WoW character")
+    @tree.command(name="remove_char", description="Unlink a WoW character", guild=guild)
     @app_commands.describe(char="Character name with realm (e.g. Akisfury-Blackrock)")
     async def remove_char(interaction: discord.Interaction, char: str):
         session = db_handler.session
@@ -69,7 +69,7 @@ def register_char_commands(tree: discord.app_commands.CommandTree, db_handler, g
         else:
             await interaction.response.send_message(f"Character {char} was not linked to your account.", ephemeral=True)
 
-    @tree.command(name="list_chars", description="List your linked WoW characters with profile info")
+    @tree.command(name="list_chars", description="List your linked WoW characters with profile info", guild=guild)
     async def list_chars(interaction: discord.Interaction):
         session = db_handler.session
         user_id = str(interaction.user.id)
@@ -131,4 +131,21 @@ def register_char_commands(tree: discord.app_commands.CommandTree, db_handler, g
         lines.append("\nLegend:")
         lines.append("🔶 Mythic / 662+ | 🟣 Heroic / 649+ | 🔵 Normal / 636+ | 🟢 LFR / 623+")
         output = "```text\n" + "\n".join(lines) + "\n```"
-        await interaction.response.send_message(output, ephemeral=True)
+        # Nachricht splitten, wenn zu lang
+        MAX_LENGTH = 1800  # Sicherheitsreserve für Markdown/Codeblocks
+        blocks = []
+        buffer = ""
+        
+        for line in lines:
+            if len(buffer) + len(line) + 1 > MAX_LENGTH:
+                blocks.append("```text\n" + buffer + "\n```")
+                buffer = ""
+            buffer += line + "\n"
+        
+        if buffer:
+            blocks.append("```text\n" + buffer + "\n```")
+        
+        # Erste Nachricht als Antwort, Rest als Followups
+        await interaction.response.send_message(blocks[0], ephemeral=True)
+        for block in blocks[1:]:
+            await interaction.followup.send(block, ephemeral=True)

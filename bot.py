@@ -24,9 +24,14 @@ setup_reaction_handler(bot, db_handler)
 async def on_ready():
     guild = discord.Object(id=DISCORD_GUILD_ID)
     # ⚠️ Befehle in dieser Guild löschen
-    #tree.clear_commands(guild=guild)
-    #await tree.sync(guild=guild)
-    #print(f"🧹 Alle Guild-Commands in {DISCORD_GUILD_ID} gelöscht.")
+    await tree.sync()
+    tree.clear_commands(guild=None)
+    await tree.sync()
+    await tree.sync(guild=guild)
+    tree.clear_commands(guild=guild)
+    await tree.sync(guild=guild)
+
+    print(f"🧹 Alle Guild-Commands in {DISCORD_GUILD_ID} gelöscht.")
     
     # Jetzt neu registrieren
     register_char_commands(tree, db_handler, guild=guild)
@@ -40,6 +45,12 @@ async def on_ready():
     
     print("Commands before sync:", tree.get_commands())
     await tree.sync(guild=guild)
+    
+    synced = await tree.sync(guild=guild)
+    print("📋 Synced Commands:")
+    for cmd in synced:
+        print(f" - /{cmd.name}")
+    
     print(f"✅ Bot is online as {bot.user} (commands synced to guild {DISCORD_GUILD_ID})")
 
 if __name__ == '__main__':

@@ -6,7 +6,7 @@ from libs.sql_handler import TrackedGuild
 
 def register_guild_commands(tree: discord.app_commands.CommandTree, db_handler, guild=None):
 
-    @tree.command(name="add_guild", description="Add a guild to tracking list")
+    @tree.command(name="add_guild", description="Add a guild to tracking list", guild=guild)
     @app_commands.describe(name="Guild name", realm="Guild realm")
     async def add_guild(interaction: discord.Interaction, name: str, realm: str):
         session = db_handler.session
@@ -23,7 +23,7 @@ def register_guild_commands(tree: discord.app_commands.CommandTree, db_handler, 
             session.rollback()
             await interaction.response.send_message(f"❌ Failed to add guild: {e}", ephemeral=True)
 
-    @tree.command(name="remove_guild", description="Remove a tracked guild")
+    @tree.command(name="remove_guild", description="Remove a tracked guild", guild=guild)
     @app_commands.describe(name="Guild name", realm="Guild realm")
     async def remove_guild(interaction: discord.Interaction, name: str, realm: str):
         session = db_handler.session
@@ -38,7 +38,7 @@ def register_guild_commands(tree: discord.app_commands.CommandTree, db_handler, 
             session.rollback()
             await interaction.response.send_message(f"❌ Failed to remove guild: {e}", ephemeral=True)
 
-    @tree.command(name="list_guilds", description="List all tracked guilds")
+    @tree.command(name="list_guilds", description="List all tracked guilds", guild=guild)
     async def list_guilds(interaction: discord.Interaction):
         session = db_handler.session
         try:
